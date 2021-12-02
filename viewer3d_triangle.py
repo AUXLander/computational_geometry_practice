@@ -2,9 +2,22 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQGLViewer import *
 from OpenGL.GL import *
+from OpenGL.GLU import *
 from PyQGLViewer import QGLViewer
 from typing import Collection, Dict
-from numpy import NaN
+from numpy import NaN, int32, unsignedinteger
+from dataclasses import dataclass
+
+@dataclass
+class Size:
+    x: float
+    y: float
+    z: float
+
+def frange(x : float, y : float, step : float = 1.0):
+    while x < y:
+        yield x
+        x += step
 
 class fPoint:
     def __init__(self, x : float, y  : float, z : float):
@@ -80,7 +93,9 @@ class VertexList:
     def empty(self) -> bool:
         return len(self.vlist) == 0
 
-
+class Figure:
+    def draw():
+        pass
 
 class Cube:
     def __init__(self, position : fPoint, size : float, color : fColor):
@@ -136,35 +151,22 @@ class Cube:
             self.points[idx].glVertex()
         glEnd()
         
+
+class Task(QGLViewer):
+    def __init__(self, name : str, descr : str, parent = None):
+        QGLViewer.__init__(self, parent)
         
-        
-class Task:
-    def __init__(self, name : str, descr : str):
         self.name = name
         self.descr = descr
-
-    def main(self):
-        pass
-
-    def run(self):
-        print("Task: ", self.name, "\n\n", self.descr, "\n\nPresent result")
-        self.main()
-            
         
+    def resize(self, width, height):
+        side = min(width, height)
+        glViewport(int((width - side) / 2), int((height - side) / 2), side, side)
 
-class TaskTest(Task):
-    def __init__(self, name : str = "", descr : str = ""):
-        Task.__init__(self, name, descr)
-
-    def main(self):
-        print("Hello, World!")
-        
-
-
-class Viewer(QGLViewer):
-    def __init__(self, parent = None):
-        QGLViewer.__init__(self, parent)
-        self.cube = Cube(fPoint(0,0,0), 1.0, fColor(0.0, 1.0, 0.0))
+        # glMatrixMode(GL_PROJECTION)
+        # glLoadIdentity()
+        # glOrtho(-0.5, +0.5, -0.5, +0.5, 4.0, 15.0)
+        # glMatrixMode(GL_MODELVIEW) 
 
     def keyPressEvent(self,e):
         modifiers = e.modifiers()
@@ -175,18 +177,68 @@ class Viewer(QGLViewer):
         self.updateGL()
 
     def draw(self):
-        # glBegin(GL_TRIANGLES)
-        # self.vlist.build()
-        # glEnd()
+        pass
 
+    def run(self):
+        print("Task: ", self.name, "\n\n", self.descr, "\n\nPresent result")
+            
+
+class CubeTask(Task):
+    def __init__(self):
+        Task.__init__(self, "Cube", "Draw cube")
+
+        self.cube = Cube(fPoint(0,0,0), 1.0, fColor(0.0, 1.0, 0.0))
+
+    def draw(self):
         self.cube.draw()
+
+
+class CubeGridTask(Task):
+    dim  : Size
+    size : Size
+    step : Size
+
+    def __init__(self, width: float, height : float, depth : float, dimX : int, dimY : int, dimZ : int):
+        Task.__init__(self, "Cube Grid", "Draw cube grid")
+
+        self.size = Size(width, height, depth)
+        self.dim = Size(dimX, dimY, dimZ)
+        self.step = Size(width, height, depth)
+        
+        self.step.x = self.size.x / float(self.dim.x)
+        self.step.y = self.size.y / float(self.dim.y)
+        self.step.z = self.size.z / float(self.dim.z)
+
+        self.count : int = dimX * dimY
+        self.cubes : list[Cube] = []
+
+        self.emplace()
+
+    def emplace(self):
+        for z in frange(0, self.size.z, self.step.z):
+            for x in frange(0, self.size.x, self.step.x):
+                for y in frange(0, self.size.y, self.step.y):
+                    point = fPoint(x,y,z)
+                    color = fColor(.1, .8, .2)
+                    self.cubes.append(Cube(point, .1, color))
+
+    def draw(self):
+        self.resize(600, 600)
+        glDisable(GL_DEPTH_TEST)
+
+        for cube in self.cubes:
+            cube.draw()
+
 
 
  
 def main():
     qapp = QApplication([])
 
-    viewer = Viewer()
+    
+
+    viewer = CubeGridTask(3, 3, 3, 5, 5, 5)
+
     viewer.show()
 
     qapp.exec_()
