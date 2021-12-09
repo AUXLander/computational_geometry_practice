@@ -7,6 +7,8 @@ from PyQGLViewer import QGLViewer
 from typing import Collection, Dict
 from numpy import NaN, int32, unsignedinteger
 from dataclasses import dataclass
+import random
+import math
 
 @dataclass
 class Size:
@@ -18,6 +20,8 @@ def frange(x : float, y : float, step : float = 1.0):
     while x < y:
         yield x
         x += step
+
+
 
 class fPoint:
     def __init__(self, x : float, y  : float, z : float):
@@ -163,11 +167,6 @@ class Task(QGLViewer):
         side = min(width, height)
         glViewport(int((width - side) / 2), int((height - side) / 2), side, side)
 
-        # glMatrixMode(GL_PROJECTION)
-        # glLoadIdentity()
-        # glOrtho(-0.5, +0.5, -0.5, +0.5, 4.0, 15.0)
-        # glMatrixMode(GL_MODELVIEW) 
-
     def keyPressEvent(self,e):
         modifiers = e.modifiers()
         if (e.nativeVirtualKey()==Qt.Key_W):
@@ -193,7 +192,121 @@ class CubeTask(Task):
         self.cube.draw()
 
 
-class CubeGridTask(Task):
+class CubesGrid:
+    def __init__(self, count : int):
+        self.count : int = count
+        self.cubes : list[Cube] = []
+
+        self.emplace()
+
+    def emplace(self):
+        pass
+
+    def draw(self):
+        glDisable(GL_DEPTH_TEST)
+
+        for cube in self.cubes:
+            cube.draw()
+
+class CubesOnSphereGrid(CubesGrid, Task):
+    size : float
+    radius : float
+    position : fPoint
+
+
+    def __init__(self, size : float, position : fPoint, radius : float, count : int):
+        Task.__init__(self, "Cube Grid", "Draw cube grid")
+
+        self.radius = radius
+        self.position = position
+        self.size = size
+
+        CubesGrid.__init__(self, count)
+
+    def emplace(self):
+        r = self.radius
+        origin = Size(0,0,0)
+
+        for idx in range(0, self.count):
+
+            phi = random.uniform(0, 360.0)
+            psi = random.uniform(0, 180.0)
+
+            origin.x = r * math.sin(psi) * math.cos(phi)
+            origin.y = r * math.sin(psi) * math.sin(phi)
+
+            origin.z = r * math.cos(psi) + random.uniform(.0, .25)
+
+            x = self.position.x + origin.x
+            y = self.position.y + origin.y
+            z = self.position.z + origin.z
+            
+            color = fColor(.1, .8, .2)
+            self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
+
+class CubesInSphereGrid(CubesGrid, Task):
+    size : float
+    radius : float
+    position : fPoint
+
+
+    def __init__(self, size : float, position : fPoint, radius : float, count : int):
+        Task.__init__(self, "Cube Grid", "Draw cube grid")
+
+        self.radius = radius
+        self.position = position
+        self.size = size
+
+        CubesGrid.__init__(self, count)
+
+    def emplace(self):
+        r = self.radius
+        origin = Size(0,0,0)
+
+        for idx in range(0, self.count):
+
+            phi = random.uniform(0, 360.0)
+            psi = random.uniform(0, 180.0)
+
+            origin.x = r * math.sin(psi) * math.cos(phi)
+            origin.y = r * math.sin(psi) * math.sin(phi)
+
+            origin.z = r * math.cos(psi) * random.uniform(0, 1.0)
+
+            x = self.position.x + origin.x
+            y = self.position.y + origin.y
+            z = self.position.z + origin.z
+            
+            color = fColor(.1, .8, .2)
+            self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
+
+
+class CubesInCubeGrid(CubesGrid, Task):
+    grid : Size
+    size : float
+    position : fPoint
+
+
+    def __init__(self, width: float, height : float, depth : float, position : fPoint, size : float, count : int):
+        Task.__init__(self, "Cube Grid", "Draw cube grid")
+
+        self.size = size / 2
+        self.position = position
+        self.grid = Size(width, height, depth)
+
+        CubesGrid.__init__(self, count)
+
+    def emplace(self):
+        for idx in range(0, self.count):
+            x = self.position.x + random.uniform(-1.0, 1.0) * self.grid.x
+            y = self.position.y + random.uniform(-1.0, 1.0) * self.grid.y
+            z = self.position.z + random.uniform(-1.0, 1.0) * self.grid.z
+
+            color = fColor(.1, .8, .2)
+            self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
+
+
+class CubesOnGrid(Task, CubesGrid):
     dim  : Size
     size : Size
     step : Size
@@ -201,18 +314,15 @@ class CubeGridTask(Task):
     def __init__(self, width: float, height : float, depth : float, dimX : int, dimY : int, dimZ : int):
         Task.__init__(self, "Cube Grid", "Draw cube grid")
 
-        self.size = Size(width, height, depth)
         self.dim = Size(dimX, dimY, dimZ)
+        self.size = Size(width, height, depth)
         self.step = Size(width, height, depth)
         
         self.step.x = self.size.x / float(self.dim.x)
         self.step.y = self.size.y / float(self.dim.y)
         self.step.z = self.size.z / float(self.dim.z)
 
-        self.count : int = dimX * dimY
-        self.cubes : list[Cube] = []
-
-        self.emplace()
+        CubesGrid.__init__(self, dimX * dimY)
 
     def emplace(self):
         for z in frange(0, self.size.z, self.step.z):
@@ -220,24 +330,17 @@ class CubeGridTask(Task):
                 for y in frange(0, self.size.y, self.step.y):
                     point = fPoint(x,y,z)
                     color = fColor(.1, .8, .2)
-                    self.cubes.append(Cube(point, .1, color))
-
-    def draw(self):
-        self.resize(600, 600)
-        glDisable(GL_DEPTH_TEST)
-
-        for cube in self.cubes:
-            cube.draw()
-
+                    self.cubes.append(Cube(point, .01, color))
 
 
  
 def main():
     qapp = QApplication([])
 
-    
-
-    viewer = CubeGridTask(3, 3, 3, 5, 5, 5)
+    #viewer = CubesInCubeGrid(1, 1, 1, 5, 5, 5)
+    #viewer = CubesInCubeGrid(0.5, 0.5, 0.5, fPoint(0,0,0), 0.01, 350)
+    #viewer = CubesInSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
+    viewer = CubesOnSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
 
     viewer.show()
 
