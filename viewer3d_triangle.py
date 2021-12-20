@@ -306,7 +306,7 @@ class CubesInCubeGrid(CubesGrid, Task):
             self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
 
 
-class CubesOnGrid(Task, CubesGrid):
+class CubesOnGrid(CubesGrid, Task):
     dim  : Size
     size : Size
     step : Size
@@ -337,10 +337,10 @@ class CubesOnGrid(Task, CubesGrid):
 def main():
     qapp = QApplication([])
 
-    #viewer = CubesInCubeGrid(1, 1, 1, 5, 5, 5)
+    viewer = CubesOnGrid(1, 1, 1, 5, 5, 5)
     #viewer = CubesInCubeGrid(0.5, 0.5, 0.5, fPoint(0,0,0), 0.01, 350)
     #viewer = CubesInSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
-    viewer = CubesOnSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
+    #viewer = CubesOnSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
 
     viewer.show()
 
