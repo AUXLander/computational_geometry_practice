@@ -5,16 +5,12 @@ from CGAL.CGAL_Kernel import Point_3
 from CGAL.CGAL_Kernel import Plane_3
 from CGAL import CGAL_Convex_hull_3
 from CGAL.CGAL_Polyhedron_3 import Polyhedron_3
-
-from CGAL.CGAL_Polyhedron_3 import Polyhedron_3_Vertex_handle
-
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQGLViewer import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from PyQGLViewer import QGLViewer
-from dataclasses import dataclass
 import random
 
 pts : list[Point_3] = []
@@ -59,35 +55,16 @@ class Viewer(QGLViewer):
         self.create_convex_hull()
         #self.create_intersection()
 
-        # self.vertices = [Point_3(1, 0, 0),
-        #                  Point_3(1, 1, 0),
-        #                  Point_3(1, 0, 1),
-        #                  Point_3(0, 0, 0),
-        #                  Point_3(0, 1, 1),
-        #                  Point_3(0, 1, 0),
-        #                  Point_3(0, 0, 1),
-        #                  Point_3(1, 1, 1)]
-
         for vertice in self.vertices:
             print(vertice)
 
-    def create_points(self):
-        self.points.append(Point_3(0, 0, 0))
-        self.points.append(Point_3(0, 1, 0))
-        self.points.append(Point_3(1, 1, 0))
-        self.points.append(Point_3(1, 0, 0))
-        self.points.append(Point_3(0, 0, 1))
-        self.points.append(Point_3(0, 1, 1))
-        self.points.append(Point_3(1, 1, 1))
-        self.points.append(Point_3(1, 0, 1))
+    def create_points(self, points_count = 100):
+        for i in range(points_count):
+            x = random.uniform(0.0, 1.0)
+            y = random.uniform(0.0, 1.0)
+            z = random.uniform(0.0, 1.0)
 
-    def create_planes(self):
-        self.planes.append(Plane_3(-1, 0, 0, 0))
-        self.planes.append(Plane_3(1, 0, 0, -1))
-        self.planes.append(Plane_3(0, -1, 0, 0))
-        self.planes.append(Plane_3(0, 1, 0, -1))
-        self.planes.append(Plane_3(0, 0, -1, 0))
-        self.planes.append(Plane_3(0, 0, 1, -1))
+            self.points.append(Point_3(x, y, z))
 
     def create_convex_hull(self):
         self.convex_hull.clear()
@@ -98,31 +75,30 @@ class Viewer(QGLViewer):
         self.convex_hull.clear()
         CGAL_Convex_hull_3.halfspace_intersection_3(self.planes, self.convex_hull)
         self.vertices = self.convex_hull.vertices()
-        
-    def keyPressEvent(self,e):
-        modifiers = e.modifiers()
-        if (e.nativeVirtualKey()==Qt.Key_W):
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-        elif (e.nativeVirtualKey()==Qt.Key_F):
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-        self.updateGL()
-
 
     def draw(self):
-        glPointSize(4)
-        
+        glPointSize(5)
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         glBegin(GL_POINTS)
+        glColor3f(1.0, 0.0, 0.0)
 
         for point in self.points:
-            glVertex3f(point.x() * 0.9, point.y() * 0.9, point.z() * 0.9)
+            glVertex3f(point.x(), point.y(), point.z())
 
         glEnd()
+       
+        glBegin(GL_TRIANGLES)
+        glColor3f(0.0, 1.0, 0.0)
 
-        # glBegin(GL_POLYGON)
-        glBegin(GL_LINE_STRIP)
+        for face in self.convex_hull.facets():
+            p1 = face.halfedge()
+            p2 = p1.next()
+            p3 = p2.next()
 
-        for vertice in self.vertices:
-            glVertex3f(vertice.x(), vertice.y(), vertice.z())
+            glVertex3f(p1.vertex().point().x(), p1.vertex().point().y(), p1.vertex().point().z())
+            glVertex3f(p2.vertex().point().x(), p2.vertex().point().y(), p2.vertex().point().z())
+            glVertex3f(p3.vertex().point().x(), p3.vertex().point().y(), p3.vertex().point().z())
 
         glEnd()
 

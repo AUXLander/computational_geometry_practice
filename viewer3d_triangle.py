@@ -337,12 +337,17 @@ class CubesOnGrid(CubesGrid, Task):
 def main():
     qapp = QApplication([])
 
-    viewer = CubesOnGrid(1, 1, 1, 5, 5, 5)
-    #viewer = CubesInCubeGrid(0.5, 0.5, 0.5, fPoint(0,0,0), 0.01, 350)
-    #viewer = CubesInSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
-    #viewer = CubesOnSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
-
-    viewer.show()
+    viewers = [
+        CubesOnGrid(1, 1, 1, 5, 5, 5),
+        CubesInCubeGrid(0.5, 0.5, 0.5, fPoint(0,0,0), 0.01, 350),
+        CubesInSphereGrid(0.01, fPoint(0,0,0), 1.0, 900),
+        CubesOnSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
+    ]
+    
+    viewers[0].show()
+    viewers[1].show()
+    viewers[2].show()
+    viewers[3].show()
 
     qapp.exec_()
 

@@ -16,15 +16,25 @@ class Viewer(QGLViewer):
         self.points = []
         self.convex_hull = []
 
-        self.emplace(50)
-        self.create_convex_hull()
+        self.recreate_points(50)
         
-    def emplace(self, points_count):
+    def recreate_points(self, points_count):
+        self.points.clear()
+
         for i in range(points_count):
             x = random.uniform(0.0, 1.0)
             y = random.uniform(0.0, 1.0)
 
             self.points.append(Point_2(x, y))
+
+        self.create_convex_hull()
+
+    def keyPressEvent(self,e):
+        modifiers = e.modifiers()
+        if (e.nativeVirtualKey() == Qt.Key_G):
+            self.recreate_points(50)
+
+        self.updateGL()
            
     def draw_points(self):
         glBegin(GL_POINTS)
