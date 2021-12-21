@@ -30,7 +30,6 @@ class Viewer(QGLViewer):
         self.create_convex_hull()
 
     def keyPressEvent(self,e):
-        modifiers = e.modifiers()
         if (e.nativeVirtualKey() == Qt.Key_G):
             self.recreate_points(50)
 

@@ -51,20 +51,28 @@ class Viewer(QGLViewer):
         self.convex_hull = Polyhedron_3()
         self.vertices = []
         
-        self.create_points()
-        self.create_convex_hull()
+        self.recreate_points()
         #self.create_intersection()
 
         for vertice in self.vertices:
             print(vertice)
 
-    def create_points(self, points_count = 100):
+    def recreate_points(self, points_count = 100):
+        self.points.clear()
         for i in range(points_count):
             x = random.uniform(0.0, 1.0)
             y = random.uniform(0.0, 1.0)
             z = random.uniform(0.0, 1.0)
 
             self.points.append(Point_3(x, y, z))
+        
+        self.create_convex_hull()
+
+    def keyPressEvent(self,e):
+        if (e.nativeVirtualKey() == Qt.Key_G):
+            self.recreate_points()
+
+        self.updateGL()
 
     def create_convex_hull(self):
         self.convex_hull.clear()

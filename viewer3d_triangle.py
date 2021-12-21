@@ -227,6 +227,7 @@ class CubesOnSphereGrid(CubesGrid, Task):
         r = self.radius
         origin = Size(0,0,0)
 
+        self.cubes.clear()
         for idx in range(0, self.count):
 
             phi = random.uniform(0, 360.0)
@@ -243,6 +244,11 @@ class CubesOnSphereGrid(CubesGrid, Task):
             
             color = fColor(.1, .8, .2)
             self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
+
+    def keyPressEvent(self,e):
+        if (e.nativeVirtualKey()==Qt.Key_G):
+            self.emplace()
+            self.updateGL()
 
 class CubesInSphereGrid(CubesGrid, Task):
     size : float
@@ -263,6 +269,7 @@ class CubesInSphereGrid(CubesGrid, Task):
         r = self.radius
         origin = Size(0,0,0)
 
+        self.cubes.clear()
         for idx in range(0, self.count):
 
             phi = random.uniform(0, 360.0)
@@ -279,6 +286,11 @@ class CubesInSphereGrid(CubesGrid, Task):
             
             color = fColor(.1, .8, .2)
             self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
+
+    def keyPressEvent(self,e):
+        if (e.nativeVirtualKey()==Qt.Key_G):
+            self.emplace()
+            self.updateGL()
 
 
 class CubesInCubeGrid(CubesGrid, Task):
@@ -297,6 +309,8 @@ class CubesInCubeGrid(CubesGrid, Task):
         CubesGrid.__init__(self, count)
 
     def emplace(self):
+        self.cubes.clear()
+
         for idx in range(0, self.count):
             x = self.position.x + random.uniform(-1.0, 1.0) * self.grid.x
             y = self.position.y + random.uniform(-1.0, 1.0) * self.grid.y
@@ -304,6 +318,13 @@ class CubesInCubeGrid(CubesGrid, Task):
 
             color = fColor(.1, .8, .2)
             self.cubes.append(Cube(fPoint(x,y,z), self.size, color))
+    
+    def keyPressEvent(self,e):
+        if (e.nativeVirtualKey()==Qt.Key_G):
+            self.emplace()
+            self.updateGL()
+
+        
 
 
 class CubesOnGrid(CubesGrid, Task):
@@ -343,7 +364,7 @@ def main():
         CubesInSphereGrid(0.01, fPoint(0,0,0), 1.0, 900),
         CubesOnSphereGrid(0.01, fPoint(0,0,0), 1.0, 900)
     ]
-    
+
     viewers[0].show()
     viewers[1].show()
     viewers[2].show()
